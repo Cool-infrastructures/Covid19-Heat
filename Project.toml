@@ -1,2 +1,9 @@
+[deps]
+Dates
+CSV
+DataFrames
+Plots
+StatsPlots
+
 [compat]
 julia = "1.5"
