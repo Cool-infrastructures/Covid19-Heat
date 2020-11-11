@@ -8,14 +8,13 @@ using InteractiveUtils
 begin
 	import Dates
 	import CSV
-	import XLSX
 	using DataFrames
 	import Plots
 	using StatsPlots
 end
 
 # ╔═╡ c5fc428a-1c55-11eb-357f-19111a1c3338
-	absolute_path = joinpath(pwd(), "data", "Cool Infrastructures Pakistan Raw Data Wave 1.csv")    
+	absolute_path = joinpath(pwd(), "data", "Cool Infrastructures Pakistan Raw Data Wave 1.csv")
 
 # ╔═╡ adc5a67e-245b-11eb-2600-05e4ca4fa4bb
 df = DataFrames.DataFrame(CSV.read(absolute_path))
