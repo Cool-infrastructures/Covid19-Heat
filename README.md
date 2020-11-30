@@ -35,6 +35,8 @@ I will describe all steps necessary to do this but, briefly, we need to install 
 
         using IJulia; notebook()
 
+    Press y if asked about the installation of conda which will also take some time.
+
 7. This should open a website in your browser which shows your home folder. After you have done all these steps once, the next time you only need to start Julia and perform step 6. to get the service running.
 8. Now you need to download the project files. To do this, you click on the green 'Code' button on this website (https://github.com/Cool-infrastructures/Covid19-Heat/) and select 'Download ZIP'.
 9. Once the zip file is downloaded you have to extract it somewhere in your home folder.
