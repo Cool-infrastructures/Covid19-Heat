@@ -29,7 +29,7 @@ I will describe all steps necessary to do this but, briefly, we need to install 
 
         using IJulia
 
-    You will need to press y to allow the installation of conda which will also take some time.
+    Press y if asked about the installation of conda which will also take some time.
         
 6. Now we can start the jupyter notebook service by entering the following text into the programme and afterwards pressing enter:
 
