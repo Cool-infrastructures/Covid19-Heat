@@ -20,7 +20,7 @@ I will describe all steps necessary to do this but, briefly, we need to install 
 
 1. Download Julia for your operating system from https://julialang.org/downloads/
 2. Install it on your computer
-3. Start Julia and press ']' once it is started
+3. Start Julia and press ] once it is started
 4. This step will take at least several minutes so it is a good time to get a coffee or go for a walk once you have pressed enter. Copy the following text into the programme window and press enter:
 
         add IJulia, CSV, DataFrames, Plots, StatsPlots, StatsBase, DataStructures; precompile
@@ -29,7 +29,7 @@ I will describe all steps necessary to do this but, briefly, we need to install 
 
         using IJulia
 
-    You will need to press 'y' to allow the installation of conda which will also take some time.
+    You will need to press y to allow the installation of conda which will also take some time.
         
 6. Now we can start the jupyter notebook service by entering the following text into the programme and afterwards pressing enter:
 
