@@ -21,11 +21,6 @@ app.layout = html_div() do
                 ],
                 value = "Country",
             ),
-            dcc_radioitems(
-                id = "xaxis-type",
-                options = [(label = i, value = i) for i in ["linear", "log"]],
-                value = "linear",
-            ),
         ],
         style = (width = "48%", display = "inline-block"),
     ),
@@ -38,11 +33,6 @@ app.layout = html_div() do
                 ],
                 value = "Gender",
             ),
-            dcc_radioitems(
-                id = "yaxis-type",
-                options = [(label = i, value = i) for i in ["linear", "log"]],
-                value = "linear",
-            ),
         ],
         style = (width = "48%", display = "inline-block", float = "right"),
     ),
@@ -54,9 +44,9 @@ callback!(
     Output("indicator-graphic", "figure"),
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
-    Input("xaxis-type", "value"),
-    Input("yaxis-type", "value")
-) do xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type
+    #Input("xaxis-type", "value"),
+    #Input("yaxis-type", "value")
+) do xaxis_column_name, yaxis_column_name#, xaxis_type, yaxis_type
 
     # Plot the data as bar chart
     column_x = xaxis_column_name
@@ -66,7 +56,7 @@ callback!(
     # Group all combinations from the two columns
     df_count = DataFrame(x = Any[], y = Any[], groupcount = Int64[])
     for (key, subdf) in pairs(groupby(df_CH, [column_x, column_y]))
-        println("Number of data points for $(key[column_x]) - $(key[column_y]): $(nrow(subdf))")
+        #println("Number of data points for $(key[column_x]) - $(key[column_y]): $(nrow(subdf))")
         push!(df_count, [key[column_x], key[column_y], nrow(subdf)])
     end
 
