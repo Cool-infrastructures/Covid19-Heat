@@ -21,6 +21,7 @@ app.layout = html_div() do
                 ],
                 value = "Country",
             ),
+            dcc_graph(id = "histogram_count"),
         ],
         style = (width = "48%", display = "inline-block"),
     ),
@@ -33,15 +34,16 @@ app.layout = html_div() do
                 ],
                 value = "Gender",
             ),
+            dcc_graph(id = "histogram_percentage")
         ],
         style = (width = "48%", display = "inline-block", float = "right"),
-    ),
-    dcc_graph(id = "indicator-graphic")
+    )
 end
 
 callback!(
     app,
-    Output("indicator-graphic", "figure"),
+    Output("histogram_count", "figure"),
+    Output("histogram_percentage", "figure"),
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
     #Input("xaxis-type", "value"),
@@ -71,14 +73,15 @@ callback!(
     # Unstack for side-by-side bar chart
     df3=unstack(df_count, [:x], :y, :groupcount)
 
-    return PlotlyJS.plot(
+    fig1 = PlotlyJS.plot(
         #[bar(df3, x=:x, y=y, name=String(y)) for y in [:FEMALE, :MALE]],
         [bar(df3, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
         #x, y,
-        #Layout(
-        #    xaxis=attr(type=xaxis_type, title_text=xaxis_column_name),
-        #    yaxis=attr(type=yaxis_type, title_text=yaxis_column_name),
-        #),
+        Layout(
+            xaxis=attr(title_text=xaxis_column_name),
+            yaxis=attr(title_text="Count"),
+            title=attr(text="Number of survey respondents grouped by $(yaxis_column_name)"),
+        ),
         #text = df2f[
         #    df2f[!, Symbol("Indicator Name")] .== yaxis_column_name,
         #    Symbol("Country Name"),
@@ -86,6 +89,25 @@ callback!(
         #mode = "markers",
         #marker=attr(size = 15, opacity=0.5, line=attr(width=0.5, color="white"))
     )
+
+    fig2 = PlotlyJS.plot(
+        #[bar(df3, x=:x, y=y, name=String(y)) for y in [:FEMALE, :MALE]],
+        [bar(df3, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
+        #x, y,
+        Layout(
+            xaxis=attr(title_text=xaxis_column_name),
+            yaxis=attr(title_text="Count"),
+            title=attr(text="Number of survey respondents grouped by $(yaxis_column_name)"),
+        ),
+        #text = df2f[
+        #    df2f[!, Symbol("Indicator Name")] .== yaxis_column_name,
+        #    Symbol("Country Name"),
+        #],
+        #mode = "markers",
+        #marker=attr(size = 15, opacity=0.5, line=attr(width=0.5, color="white"))
+    )
+
+    return fig1, fig2
 end
 
 run_server(app, "0.0.0.0", debug = true)
