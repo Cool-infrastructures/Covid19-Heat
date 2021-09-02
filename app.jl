@@ -22,6 +22,7 @@ app.layout = html_div() do
                 value = "Country",
             ),
             dcc_graph(id = "histogram_count"),
+            dcc_graph(id = "histogram_percentage_xaxis"),
         ],
         style = (width = "48%", display = "inline-block"),
     ),
@@ -44,6 +45,7 @@ callback!(
     app,
     Output("histogram_count", "figure"),
     Output("histogram_percentage", "figure"),
+    Output("histogram_percentage_xaxis", "figure"),  
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
     #Input("xaxis-type", "value"),
@@ -55,14 +57,28 @@ callback!(
     column_y = yaxis_column_name
     y_unique = unique(df_CH[!, column_y])
 
-    # Group all combinations from the two columns
-    df_count = DataFrame(x = Any[], y = Any[], groupcount = Int64[])
-    for (key, subdf) in pairs(groupby(df_CH, [column_x, column_y]))
-        #println("Number of data points for $(key[column_x]) - $(key[column_y]): $(nrow(subdf))")
-        push!(df_count, [key[column_x], key[column_y], nrow(subdf)])
+    # Calculate column_x group sizes
+    df_x = DataFrame(x = Any[], groupcount=Int64[])
+    for (key, subdf) in pairs(groupby(df_CH, [column_x]))
+        #println("Number of data points for $(key[column_x]): $(nrow(subdf))")
+        push!(df_x, [key[column_x], nrow(subdf)])
     end
 
-    y_unique = unique(df_count[!, :y])
+    # Calculate column_y group sizes
+    df_y = DataFrame(x = Any[], groupcount=Int64[])
+    for (key, subdf) in pairs(groupby(df_CH, [column_y]))
+        #println("Number of data points for $(key[column_y]): $(nrow(subdf))")
+        push!(df_y, [key[column_y], nrow(subdf)])
+    end
+   
+    # Group all combinations from the two columns
+    df2 = DataFrame(x = Any[], y = Any[], groupcount = Int64[], grouppercentage = Float64[], xaxis_percentage = Float64[], percentage = Float64[])
+    for (key, subdf) in pairs(groupby(df_CH, [column_x, column_y]))
+        #println("Number of data points for $(key[column_x]) - $(key[column_y]): $(nrow(subdf)) - $(100*nrow(subdf)/df_y[df_y.x .== key[column_y], :groupcount][1]) - $(100*nrow(subdf)/nrow(df_CH))")
+        push!(df2, [key[column_x], key[column_y], nrow(subdf), 100*nrow(subdf)/df_y[df_y.x .== key[column_y], :groupcount][1], 100*nrow(subdf)/df_x[df_x.x .== key[column_x], :groupcount][1], 100*nrow(subdf)/nrow(df_CH)])
+    end
+
+    y_unique = unique(df2[!, :y])
 
     # Make categorical to reorder
     #if haskey(reorder_categories, column_x)
@@ -71,43 +87,39 @@ callback!(
     #end
 
     # Unstack for side-by-side bar chart
-    df3=unstack(df_count, [:x], :y, :groupcount)
+    df3=unstack(df2, [:x], :y, :groupcount)
+    df4=unstack(df2, [:x], :y, :grouppercentage)
+    df5=unstack(df2, [:x], :y, :percentage)
+    df6=unstack(df2, [:x], :y, :xaxis_percentage)    
 
     fig1 = PlotlyJS.plot(
-        #[bar(df3, x=:x, y=y, name=String(y)) for y in [:FEMALE, :MALE]],
         [bar(df3, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
-        #x, y,
         Layout(
             xaxis=attr(title_text=xaxis_column_name),
             yaxis=attr(title_text="Count"),
-            title=attr(text="Number of survey respondents grouped by $(yaxis_column_name)"),
+            title=attr(text="Number of $(yaxis_column_name) responses grouped by $(xaxis_column_name)"),
         ),
-        #text = df2f[
-        #    df2f[!, Symbol("Indicator Name")] .== yaxis_column_name,
-        #    Symbol("Country Name"),
-        #],
-        #mode = "markers",
-        #marker=attr(size = 15, opacity=0.5, line=attr(width=0.5, color="white"))
+    )
+
+    fig3 = PlotlyJS.plot(
+        [bar(df5, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
+        Layout(
+            xaxis=attr(title_text=xaxis_column_name),
+            yaxis=attr(title_text="Percentage of all responses"),
+            title=attr(text="Percentage of all survey responses"),
+        ),
     )
 
     fig2 = PlotlyJS.plot(
-        #[bar(df3, x=:x, y=y, name=String(y)) for y in [:FEMALE, :MALE]],
-        [bar(df3, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
-        #x, y,
+        [bar(df6, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
         Layout(
             xaxis=attr(title_text=xaxis_column_name),
-            yaxis=attr(title_text="Count"),
-            title=attr(text="Number of survey respondents grouped by $(yaxis_column_name)"),
+            yaxis=attr(title_text="Percentage of categories on x axis"),
+            title=attr(text="Percentage of $(yaxis_column_name) responses grouped by $(xaxis_column_name)"),
         ),
-        #text = df2f[
-        #    df2f[!, Symbol("Indicator Name")] .== yaxis_column_name,
-        #    Symbol("Country Name"),
-        #],
-        #mode = "markers",
-        #marker=attr(size = 15, opacity=0.5, line=attr(width=0.5, color="white"))
     )
 
-    return fig1, fig2
+    return fig1, fig2, fig3
 end
 
 run_server(app, "0.0.0.0", debug = true)
