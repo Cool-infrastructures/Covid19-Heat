@@ -21,6 +21,7 @@ country_options = [
 ]
 
 app = dash()
+app.title = "COVID-19/Heat survey"
 
 app.layout = html_div() do
     html_label("Country selector"),
@@ -93,14 +94,19 @@ app.layout = html_div() do
         children = [
             dcc_graph(id = "histogram_count")
         ],
-        style = (width = "48%", display = "inline-block", float = "left"),
+        style = (width = "50%", display = "inline-block", float = "left"),
     ),
     html_div(
         children = [
             dcc_graph(id = "histogram_percentage")
         ],
-        style = (width = "48%", display = "inline-block", float = "right"),
-    )
+        style = (width = "50%", display = "inline-block", float = "right"),
+    ),
+    html_p(
+        children = [
+            html_hr(),
+            html_label("The presented data is from the SFC-GCRF COVID-19/Heat Urgency grant and can be found at https://github.com/Cool-infrastructures/Covid19-Heat")
+        ])
 end
 
 callback!(
@@ -181,8 +187,33 @@ callback!(
             title=attr(text="Percentage of $(yaxis_column_name) responses grouped by $(xaxis_column_name)"),
         ),
     )
-
     return fig1, fig2
+end
+
+# Update the category dropdown menues for the base response
+callback!(
+    app,
+    Output("base_cat1", "options"),
+    Output("base_cat1", "value"),
+    Output("base_cat2", "options"),
+    Output("base_cat2", "value"),
+    Input("xaxis-column", "value"),
+) do selected_base
+    categories = [(label = i, value = i) for i in unique(df_all[!, selected_base])]
+    return categories, categories[1].value, categories, categories[end].value
+end
+
+# Update the category dropdown menues for the comparison response
+callback!(
+    app,
+    Output("comparison_cat1", "options"),
+    Output("comparison_cat1", "value"),
+    Output("comparison_cat2", "options"),
+    Output("comparison_cat2", "value"),
+    Input("yaxis-column", "value"),
+) do selected_comparison
+    categories = [(label = i, value = i) for i in unique(df_all[!, selected_comparison])]
+    return categories, categories[1].value, categories, categories[end].value
 end
 
 run_server(app, "0.0.0.0", debug = true)
