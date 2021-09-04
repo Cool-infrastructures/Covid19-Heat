@@ -23,8 +23,12 @@ country_options = [
 app = dash()
 
 app.layout = html_div() do
+    html_label("Country selector"),
+    dcc_checklist(options = country_options, value = ["Cameroon"], id ="country_selector"),
+
     html_div(
         children = [
+            html_label("Base response"),
             dcc_dropdown(
                 id = "xaxis-column",
                 options = [
@@ -32,15 +36,30 @@ app.layout = html_div() do
                 ],
                 value = "Country",
             ),
-            html_label("Country selector"),
-            dcc_checklist(options = country_options, value = ["Cameroon"], id ="country_selector"),
-            dcc_graph(id = "histogram_count"),
-            dcc_graph(id = "histogram_percentage_xaxis"),
+            html_label("Base category 1 (multi select)"),
+            dcc_dropdown(
+                id = "base_cat1",
+                options = [
+                    (label = i, value = i) for i in unique(df_all[!, :Country])
+                ],
+                value = unique(df_all[!, :Country])[1],
+                multi = true,
+            ),
+            html_label("Base category 2 (multi select)"),
+            dcc_dropdown(
+                id = "base_cat2",
+                options = [
+                    (label = i, value = i) for i in unique(df_all[!, :Country])
+                ],
+                value = unique(df_all[!, :Country])[end],
+                multi = true,
+            )
         ],
         style = (width = "48%", display = "inline-block"),
     ),
     html_div(
         children = [
+            html_label("Comparison response"),
             dcc_dropdown(
                 id = "yaxis-column",
                 options = [
@@ -48,6 +67,36 @@ app.layout = html_div() do
                 ],
                 value = "Gender",
             ),
+            html_label("Comparison category 1 (multi select)"),
+            dcc_dropdown(
+                id = "comparison_cat1",
+                options = [
+                    (label = i, value = i) for i in unique(df_all[!, :Gender])
+                ],
+                value = unique(df_all[!, :Gender])[1],
+                multi = true,
+            ),
+            html_label("Comparison category 2 (multi select)"),
+            dcc_dropdown(
+                id = "comparison_cat2",
+                options = [
+                    (label = i, value = i) for i in unique(df_all[!, :Gender])
+                ],
+                value = unique(df_all[!, :Gender])[end],
+                multi = true,
+            )
+        ],
+        style = (width = "48%", display = "inline-block", float = "right"),
+    ),
+    html_hr(),
+    html_div(
+        children = [
+            dcc_graph(id = "histogram_count")
+        ],
+        style = (width = "48%", display = "inline-block", float = "left"),
+    ),
+    html_div(
+        children = [
             dcc_graph(id = "histogram_percentage")
         ],
         style = (width = "48%", display = "inline-block", float = "right"),
@@ -58,7 +107,6 @@ callback!(
     app,
     Output("histogram_count", "figure"),
     Output("histogram_percentage", "figure"),
-    Output("histogram_percentage_xaxis", "figure"),  
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
     Input("country_selector", "value"),
@@ -134,7 +182,7 @@ callback!(
         ),
     )
 
-    return fig1, fig2, fig3
+    return fig1, fig2
 end
 
 run_server(app, "0.0.0.0", debug = true)
