@@ -4,10 +4,21 @@ using Dash, DashHtmlComponents, DashCoreComponents
 ## Load COVID-19/Heat data
 filename = "Covid-19_Heat_combined_survey.csv"
 absolute_path = joinpath(pwd(), "data", filename)
-df_CH = DataFrames.DataFrame(CSV.read(absolute_path, DataFrame))
+df_all = DataFrames.DataFrame(CSV.read(absolute_path, DataFrame))
+
+# Change all numbers to strings
+df_all = string.(df_all);
 
 # Get all column names
-available_indicators = unique(names(df_CH))
+available_indicators = unique(names(df_all))
+
+# Country options
+country_options = [
+    Dict("label" => "Cameroon", "value" => "Cameroon"),
+    Dict("label" => "India", "value" => "India"),
+    Dict("label" => "Indonesia", "value" => "Indonesia"),
+    Dict("label" => "Pakistan", "value" => "Pakistan"),
+]
 
 app = dash()
 
@@ -21,6 +32,8 @@ app.layout = html_div() do
                 ],
                 value = "Country",
             ),
+            html_label("Country selector"),
+            dcc_checklist(options = country_options, value = ["Cameroon"], id ="country_selector"),
             dcc_graph(id = "histogram_count"),
             dcc_graph(id = "histogram_percentage_xaxis"),
         ],
@@ -48,9 +61,11 @@ callback!(
     Output("histogram_percentage_xaxis", "figure"),  
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
-    #Input("xaxis-type", "value"),
-    #Input("yaxis-type", "value")
-) do xaxis_column_name, yaxis_column_name#, xaxis_type, yaxis_type
+    Input("country_selector", "value"),
+) do xaxis_column_name, yaxis_column_name, countries
+
+    # Filter the selected countries
+    df_CH = filter(row -> row.Country in countries, df_all);
 
     # Plot the data as bar chart
     column_x = xaxis_column_name
