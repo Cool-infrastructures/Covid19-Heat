@@ -90,7 +90,7 @@ app.layout = html_div() do
                 ],
                 value = "Country",
             ),
-            html_label("Base category 1 (multi select)"),
+            html_label("Base Category 1 (multi select)"),
             dcc_dropdown(
                 id = "base_cat1",
                 options = [
@@ -99,7 +99,7 @@ app.layout = html_div() do
                 value = unique(df_all[!, :Country])[1],
                 multi = true,
             ),
-            html_label("Base category 2 (multi select)"),
+            html_label("Base Category 2 (multi select)"),
             dcc_dropdown(
                 id = "base_cat2",
                 options = [
@@ -121,7 +121,7 @@ app.layout = html_div() do
                 ],
                 value = "Gender",
             ),
-            html_label("Comparison category 1 (multi select)"),
+            html_label("Comparison Category 1 (multi select)"),
             dcc_dropdown(
                 id = "comparison_cat1",
                 options = [
@@ -130,7 +130,7 @@ app.layout = html_div() do
                 value = unique(df_all[!, :Gender])[1],
                 multi = true,
             ),
-            html_label("Comparison category 2 (multi select)"),
+            html_label("Comparison Category 2 (multi select)"),
             dcc_dropdown(
                 id = "comparison_cat2",
                 options = [
@@ -158,17 +158,22 @@ app.layout = html_div() do
     html_hr(),
     html_div(id = "odds_ratio"),
     html_div(id = "odds_ratio_confidence_interval"),
+    html_br(),
     html_label("Contingency table"),
+    html_br(),
+    html_div(id = "table_frame",
     DashTable.dash_datatable(
         id="table",
-        columns=[Dict("name" => "Category", "id" => "Category") Dict("name" => "Comparison Category 1", "id" => "Comp Cat 1") Dict("name" => "Comparison Category 2", "id" => "Comp Cat 2")],
-        #data = [Dict(pairs(NamedTuple(eachrow(df_table)[j]))) for j in 1:nrow(df_table)]
+        columns=[Dict("name" => "Category", "id" => "Category") Dict("name" => "Comparison Category 1", "id" => "Comp Cat 1") Dict("name" => "Comparison Category 2", "id" => "Comp Cat 2")]),
+        style = (width = "50%", float = "left"),
     ),
-    html_p(
+    html_br(),
+    html_div(
         children = [
             html_hr(),
             html_label("The presented data is from the SFC-GCRF COVID-19/Heat Urgency grant and can be found at https://github.com/Cool-infrastructures/Covid19-Heat")
-        ])
+        ],
+        style = (width = "100%", float = "left"))
 end
 
 callback!(
