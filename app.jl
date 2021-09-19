@@ -1,5 +1,6 @@
 using CSV, DataFrames, HTTP, PlotlyJS
 using Dash, DashHtmlComponents, DashCoreComponents
+using DashTable
 using HypothesisTests
 
 # Function to calculate the statistics
@@ -155,7 +156,14 @@ app.layout = html_div() do
         style = (width = "50%", display = "inline-block", float = "right"),
     ),
     html_hr(),
-    html_div(id = "stats-values"),
+    html_div(id = "odds_ratio"),
+    html_div(id = "odds_ratio_confidence_interval"),
+    html_label("Contingency table"),
+    DashTable.dash_datatable(
+        id="table",
+        columns=[Dict("name" => "Category", "id" => "Category") Dict("name" => "Comparison Category 1", "id" => "Comp Cat 1") Dict("name" => "Comparison Category 2", "id" => "Comp Cat 2")],
+        #data = [Dict(pairs(NamedTuple(eachrow(df_table)[j]))) for j in 1:nrow(df_table)]
+    ),
     html_p(
         children = [
             html_hr(),
@@ -215,6 +223,11 @@ callback!(
     df5=unstack(df2, [:x], :y, :percentage)
     df6=unstack(df2, [:x], :y, :xaxis_percentage)    
 
+    sort!(df3)
+    sort!(df4)
+    sort!(df5)
+    sort!(df6)
+
     fig1 = PlotlyJS.plot(
         [bar(df3, x=:x, y=Symbol(y), name=String(y)) for y in y_unique],
         Layout(
@@ -241,6 +254,7 @@ callback!(
             title=attr(text="Percentage of $(yaxis_column_name) responses grouped by $(xaxis_column_name)"),
         ),
     )
+
     return fig1, fig2
 end
 
@@ -273,7 +287,9 @@ end
 # Calculate and print the statistics values
 callback!(
     app,
-    Output("stats-values", "children"),
+    Output("odds_ratio", "children"),
+    Output("odds_ratio_confidence_interval", "children"),
+    Output("table", "data"),
     Input("xaxis-column", "value"),
     Input("base_cat1", "value"), 
     Input("base_cat2", "value"), 
@@ -311,18 +327,22 @@ callback!(
 
     chi_sq, p_value, odds_ratio, lower95, upper95, perc_comp1, perc_comp1_base1, num_array = calc_statistics(df_CH, base, base_categories, comp, comp_categories, false)
 
-    significant = "not statistically significant"
+    significant = "includes 1, indicating no statistical significance"
     # Check significance for lowre odds ratio
     if (lower95 < 1.0 && upper95 < 1.0) 
-        significant = "statistically significant and the odds ratio is lower"
+        significant = "is lower than 1, indicating that the odds ratio is statistically significantly lower"
     end
     # Check significance for higher odds ratio
     if (lower95 > 1.0 && upper95 > 1.0)
-        significant = "statistically significant and the odds ratio is higher"
+        significant = "is higher than 1, indicating that the odds ratio is statistically significantly higher"
     end    
 
+    odds_ratio_string = "The odds to report $(base) of $(base_cat1) is $(odds_ratio) for respondents in $(comp) - $(comp_cat1) compared to $(comp) - $(comp_cat2)."
+    confidence_string = "The 95% confidence interval ($(lower95)-$(upper95)) $(significant)."
+    
+    table_data = [Dict(:Category => "Base Category 1", Symbol("Comp Cat 1") => num_array[1,1], Symbol("Comp Cat 2") => num_array[1, 2]), Dict(:Category => "Base Category 2", "Comp Cat 1" => num_array[2,1], "Comp Cat 2" => num_array[2, 2])]
 
-    return "The odds to report $(base) of $(base_cat1) is $(odds_ratio) for respondents in $(comp) - $(comp_cat1) compared to $(comp) - $(comp_cat2). The result is $(significant)."
+    return odds_ratio_string, confidence_string, table_data
 end
 
 run_server(app, "0.0.0.0", debug = true)
