@@ -2,6 +2,7 @@ using CSV, DataFrames, HTTP, PlotlyJS
 using Dash, DashHtmlComponents, DashCoreComponents
 using DashTable
 using HypothesisTests
+using CategoricalArrays
 
 # Function to calculate the statistics
 function calc_statistics(df_tmp, base, base_categories, comp, comp_categories, print_flag=false)
@@ -73,13 +74,21 @@ country_options = [
     Dict("label" => "Pakistan", "value" => "Pakistan"),
 ]
 
+# Plot options
+plot_options = [
+    Dict("label" => "Alphabetical", "value" => "Alphabetical"),
+    Dict("label" => "Alphabetical in base categories", "value" => "Alphabetical_base"),
+    Dict("label" => "According to base categories", "value" => "according_to_base"),
+]
+
 app = dash()
 app.title = "COVID-19/Heat survey"
 
 app.layout = html_div() do
     html_label("Country selector"),
     dcc_checklist(options = country_options, value = ["Cameroon"], id ="country_selector"),
-
+    html_label("Plot ordering"),   
+    dcc_radioitems(options = plot_options, value = "Alphabetical", id = "plot_ordering"),
     html_div(
         children = [
             html_label("Base response"),
@@ -183,7 +192,10 @@ callback!(
     Input("xaxis-column", "value"),
     Input("yaxis-column", "value"),
     Input("country_selector", "value"),
-) do xaxis_column_name, yaxis_column_name, countries
+    Input("base_cat1", "value"), 
+    Input("base_cat2", "value"), 
+    Input("plot_ordering", "value"),
+) do xaxis_column_name, yaxis_column_name, countries, base_cat1, base_cat2, plot_ordering
 
     # Filter the selected countries
     df_CH = filter(row -> row.Country in countries, df_all);
@@ -192,6 +204,7 @@ callback!(
     column_x = xaxis_column_name
     column_y = yaxis_column_name
     y_unique = unique(df_CH[!, column_y])
+    x_unique = unique(df_CH[!, column_x])
 
     # Calculate column_x group sizes
     df_x = DataFrame(x = Any[], groupcount=Int64[])
@@ -216,17 +229,32 @@ callback!(
 
     y_unique = unique(df2[!, :y])
 
-    # Make categorical to reorder
-    #if haskey(reorder_categories, column_x)
-    #    df_count[!, :x] = CategoricalArray(df_count[!, :x])
-        #levels!(df_count[!,:x], reorder_categories[column_x])
-    #end
-
     # Unstack for side-by-side bar chart
     df3=unstack(df2, [:x], :y, :groupcount)
     df4=unstack(df2, [:x], :y, :grouppercentage)
     df5=unstack(df2, [:x], :y, :percentage)
     df6=unstack(df2, [:x], :y, :xaxis_percentage)    
+
+    # Sort according to the categories
+    if plot_ordering == "Alphabetical_base"
+        plot_order = vcat(sort!(base_cat1), sort!(base_cat2), sort!(x_unique))
+        unique!(plot_order)
+
+        # Make categorical to reorder
+        df3[!, :x] = CategoricalArray(df3[!, :x])
+        levels!(df3[!,:x], plot_order)
+        df6[!, :x] = CategoricalArray(df3[!, :x])
+        levels!(df6[!,:x], plot_order)
+    elseif plot_ordering == "according_to_base"
+        plot_order = vcat(base_cat1, base_cat2, sort!(x_unique))
+        unique!(plot_order)
+
+        # Make categorical to reorder
+        df3[!, :x] = CategoricalArray(df3[!, :x])
+        levels!(df3[!,:x], plot_order)
+        df6[!, :x] = CategoricalArray(df3[!, :x])
+        levels!(df6[!,:x], plot_order)
+    end
 
     sort!(df3)
     sort!(df4)
