@@ -1,6 +1,10 @@
 # Covid19-Heat
 Analyse the data from the Covid-19/Heat nexus survey
 
+## Web app
+
+A web app can be found at: https://covid-19-heat-survey.herokuapp.com
+
 ## Overview of the notebooks
 
 - Generate_individual_plots.ipynb is a Julia notebook to generate individual histograms for any column in the datasets and graphs showing the combination of two columns
@@ -30,7 +34,7 @@ I will describe all steps necessary to do this but, briefly, we need to install 
         using IJulia
 
     Press y if asked about the installation of conda which will also take some time.
-        
+
 6. Now we can start the jupyter notebook service by entering the following text into the programme and afterwards pressing enter:
 
         using IJulia; notebook()
